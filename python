@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+# gerar_rebocl_zip.py
+# Gera um site completo para "Rebocl Brank" com muitos artigos e cria um ZIP >= ~1MB
+
+import os, zipfile, random, textwrap
+
+OUT_DIR = "output"
+SITE_DIR = os.path.join(OUT_DIR, "rebocl_site")
+os.makedirs(SITE_DIR, exist_ok=True)
+os.makedirs(os.path.join(SITE_DIR, "blog"), exist_ok=True)
+os.makedirs(os.path.join(SITE_DIR, "assets"), exist_ok=True)
+
+ADS = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3680795320914851" crossorigin="anonymous"></script>'
+SEO = """
+<meta name="description" content="Rebocl Brank — Tecnologia, tutoriais e artigos práticos.">
+<meta name="keywords" content="tecnologia, tutoriais, apps, segurança digital, dicas">
+<meta name="author" content="Rebocl Brank">
+"""
+
+# Simple lightweight CSS
+css = """
+:root{--bg:#ffffff;--accent:#111}
+*{box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#111;margin:0;padding:0;}
+header{background:var(--accent);color:#fff;padding:14px;}
+header .container{max-width:1000px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+nav a{color:#fff;text-decoration:none;margin-left:14px;font-weight:600}
+.container{max-width:1000px;margin:0 auto;padding:20px}
+.article{background:#fff;padding:16px;border-radius:6px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
+.footer{background:#111;color:#fff;padding:14px;text-align:center;margin-top:30px}
+@media(max-width:700px){header .container{flex-direction:column;gap:10px}nav a{margin-left:0;margin-right:10px}}
+"""
+with open(os.path.join(SITE_DIR, "styles.css"), "w", encoding="utf-8") as f:
+    f.write(css)
+
+# Core pages
+def write_file(path, content):
+    full = os.path.join(SITE_DIR, path)
+    os.makedirs(os.path.dirname(full), exist_ok=True)
+    with open(full, "w", encoding="utf-8") as f:
+        f.write(content)
+
+index_html = f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+{SEO}
+<title>Rebocl Brank — Tecnologia</title>
+<link rel="stylesheet" href="styles.css">
+{ADS}
+</head>
+<body>
+<header>
+  <div class="container"><div><strong>Rebocl Brank</strong></div>
+    <nav><a href="index.html">Início</a><a href="about.html">Sobre</a><a href="blog/index.html">Blog</a><a href="contact.html">Contato</a></nav>
+  </div>
+</header>
+<main class="container">
+  <section class="article">
+    <h1>Bem-vindo ao Rebocl Brank</h1>
+    <p>Portal com tutoriais, guias e dicas práticas sobre tecnologia.</p>
+    <p>Veja os últimos artigos no <a href="blog/index.html">Blog</a>.</p>
+  </section>
+</main>
+<footer class="footer">© 2025 Rebocl Brank — contato: <a href="mailto:reboclbrank@gmail.com">reboclbrank@gmail.com</a></footer>
+</body>
+</html>
+"""
+write_file("index.html", index_html)
+
+write_file("about.html", f"<!doctype html><html><head>{SEO}<title>Sobre</title><link rel='stylesheet' href='styles.css'>{ADS}</head><body><div class='container'><h1>Sobre</h1><p>Rebocl Brank — conteúdo técnico e tutoriais.</p></div></body></html>")
+write_file("contact.html", f"<!doctype html><html><head>{SEO}<title>Contato</title><link rel='stylesheet' href='styles.css'>{ADS}</head><body><div class='container'><h1>Contato</h1><p>Email: reboclbrank@gmail.com</p></div></body></html>")
+write_file("privacy.html", f"<!doctype html><html><head>{SEO}<title>Privacidade</title><link rel='stylesheet' href='styles.css'>{ADS}</head><body><div class='container'><h1>Política de Privacidade</h1><p>Uso de cookies para estatísticas. Contato: reboclbrank@gmail.com</p></div></body></html>")
+write_file("terms.html", f"<!doctype html><html><head>{SEO}<title>Termos</title><link rel='stylesheet' href='styles.css'>{ADS}</head><body><div class='container'><h1>Termos de Uso</h1><p>Ao usar, concorda com os termos. Contato: reboclbrank@gmail.com</p></div></body></html>")
+
+# Helper to build varied article text
+lorem_seeds = [
+    "A tecnologia avança e traz novas oportunidades para aprendizado e produtividade.",
+    "Dicas para proteger sua privacidade e manter seus dispositivos seguros.",
+    "Comparativos entre aplicativos populares e como escolher o certo para você.",
+    "Guia prático para otimizar desempenho do celular e reduzir travamentos.",
+    "Estratégias de SEO simples que ajudam blogs pequenos a crescer."
+]
+
+def build_article(title, idx):
+    parts = [f"<h1>{title}</h1>"]
+    para_count = random.randint(8, 14)
+    for i in range(para_count):
+        s = random.choice(lorem_seeds)
+        extra = " ".join(random.choices(lorem_seeds, k=2))
+        bul = ""
+        if random.random() < 0.25:
+            bul = "<ul><li>Segurança</li><li>Performance</li><li>Backup</li></ul>"
+        parts.append(f"<p>{s} {extra} {bul} Leia mais no final do artigo.</p>")
+    parts.append(f"<p><em>Autor: Rebocl Brank — contato: reboclbrank@gmail.com</em></p>")
+    parts.append("<p><a href='../index.html'>Voltar ao início</a></p>")
+    return "\n".join(parts)
+
+# Create many blog posts to reach >1MB combined when zipped
+NUM_POSTS = 100  # adjust if you need even larger size
+for i in range(1, NUM_POSTS+1):
+    title = f"Artigo {i}: Dicas de tecnologia {i}"
+    content = f"<!doctype html><html lang='pt-BR'><head><meta charset='utf-8'>{SEO}<title>{title}</title><link rel='stylesheet' href='../styles.css'>{ADS}</head><body><div class='container'>"
+    content += build_article(title, i)
+    content += "</div></body></html>"
+    write_file(f"blog/post{i}.html", content)
+
+# Sitemap, robots, redirects
+urls = ["index.html","about.html","contact.html","privacy.html","terms.html"]
+sitemap = "<?xml version='1.0' encoding='UTF-8'?><urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>\n"
+sitemap += "\n".join([f"<url><loc>https://example.netlify.app/{u}</loc></url>" for u in urls])
+sitemap += "\n".join([f"<url><loc>https://example.netlify.app/blog/post{i}.html</loc></url>" for i in range(1, NUM_POSTS+1)])
+sitemap += "\n</urlset>"
+write_file("sitemap.xml", sitemap)
+write_file("robots.txt", "User-agent: *\nDisallow:\nSitemap: /sitemap.xml\n")
+write_file("_redirects", "/* /index.html 200\n")
+
+# Create final ZIP
+ZIP_PATH = os.path.join(OUT_DIR, "rebocl_tech_1mb.zip")
+with zipfile.ZipFile(ZIP_PATH, "w", zipfile.ZIP_DEFLATED) as z:
+    for base, _, files in os.walk(SITE_DIR):
+        for fn in files:
+            full = os.path.join(base, fn)
+            arc = os.path.relpath(full, SITE_DIR)
+            z.write(full, arc)
+print("Gerado em:", ZIP_PATH)
+print("Tamanho bytes:", os.path.getsize(ZIP_PATH))
